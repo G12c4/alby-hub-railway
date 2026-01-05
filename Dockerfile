@@ -1,7 +1,10 @@
 FROM ghcr.io/sethforprivacy/phoenixd:latest
 
-# Force the container to run as Root so it can write to the Railway Volume
+# 1. Switch to root to fix the "Permission Denied" errors on Railway volumes
 USER root
 
-# Run the node with your password and settings
+# 2. CLEAR the default entrypoint so it doesn't force-start phoenixd
+ENTRYPOINT []
+
+# 3. Use a shell to find and run phoenixd with your password
 CMD ["/bin/sh", "-c", "exec $(find / -name phoenixd -type f -executable | head -n 1) --agree-to-terms-of-service --http-bind-ip 0.0.0.0 --http-password $PHOENIX_PASSWORD"]
