@@ -1,10 +1,15 @@
-FROM ghcr.io/sethforprivacy/phoenixd:latest
+FROM debian:bookworm-slim
 
-# 1. Switch to root to fix the "Permission Denied" errors on Railway volumes
-USER root
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl unzip ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
-# 2. CLEAR the default entrypoint so it doesn't force-start phoenixd
+# Download phoenixd directly from official ACINQ GitHub release
+ARG PHOENIXD_VERSION=0.9.0
+RUN curl -fSL "https://github.com/ACINQ/phoenixd/releases/download/v${PHOENIXD_VERSION}/phoenixd-${PHOENIXD_VERSION}-linux-x64.zip" -o /tmp/phoenixd.zip && \
+    unzip /tmp/phoenixd.zip -d /opt/phoenixd && \
+    rm /tmp/phoenixd.zip && \
+    chmod +x /opt/phoenixd/bin/phoenixd
+
 ENTRYPOINT []
-
-# 3. Use a shell to find and run phoenixd with your password
-CMD ["/bin/sh", "-c", "exec $(find / -name phoenixd -type f -executable | head -n 1) --agree-to-terms-of-service --http-bind-ip 0.0.0.0 --http-password $PHOENIX_PASSWORD"]
+CMD ["/bin/sh", "-c", "exec /opt/phoenixd/bin/phoenixd --agree-to-terms-of-service --http-bind-ip 0.0.0.0 --http-password $PHOENIX_PASSWORD"]
